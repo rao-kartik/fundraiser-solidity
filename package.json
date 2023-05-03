@@ -1,0 +1,21 @@
+{
+  "name": "fundraiser",
+  "version": "1.0.0",
+  "description": "Fund Raising app",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "clean": "npx hardhat clean",
+    "test": "npx hardhat test",
+    "accounts": "npx hardhat accounts"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@openzeppelin/contracts": "^4.8.3",
+    "@openzeppelin/hardhat-upgrades": "^1.24.0",
+    "hardhat": "^2.14.0",
+    "prettier": "^2.8.8"
+  }
+}
