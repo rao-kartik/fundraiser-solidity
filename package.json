@@ -7,7 +7,9 @@
     "compile": "npx hardhat compile",
     "clean": "npx hardhat clean",
     "test": "npx hardhat test",
-    "accounts": "npx hardhat accounts"
+    "h_node": "npx hardhat node",
+    "deploy": "hardhat run --network localhost scripts/deploy.ts",
+    "h_console": "npx hardhat console"
   },
   "author": "",
   "license": "ISC",
