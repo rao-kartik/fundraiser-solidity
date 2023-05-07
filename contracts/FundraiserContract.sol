@@ -114,9 +114,14 @@ contract Fundraiser is Ownable {
       "Sorry! The timeperiod to raise funds has passed"
     );
 
+    donor memory _donor = donors[_fundraiserId][msg.sender];
+
     /* updating fundraiser details */
     fundraiserDetails.amountRaised += msg.value;
-    fundraiserDetails.totalSupporters += 1;
+
+    if (_donor.amount == 0) {
+      fundraiserDetails.totalSupporters += 1;
+    }
 
     if (fundraiserDetails.amountRaised == fundraiserDetails.amount) {
       fundraiserDetails.isActive = false;
@@ -129,7 +134,6 @@ contract Fundraiser is Ownable {
     fundRaisers[_fundraiserId] = fundraiserDetails;
 
     /* updating donor details */
-    donor memory _donor = donors[_fundraiserId][msg.sender];
 
     _donor.amount += msg.value;
     _donor.donatedOn = block.timestamp;
