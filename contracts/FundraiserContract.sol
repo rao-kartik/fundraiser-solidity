@@ -4,6 +4,12 @@ pragma solidity ^0.8.17;
 import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+/**
+ * @title Fundraiser Contract
+ * @author Kartik Yadav
+ * @notice This contract is for raising funds from the community for those who are  in need of the funds for differnt purposes like education, medical, animals, environemnt and others.
+ */
+
 contract Fundraiser is Ownable {
   enum Category {
     EDUCATION,
@@ -59,6 +65,13 @@ contract Fundraiser is Ownable {
   mapping(uint256 => mapping(address => donor)) public donors;
   mapping(uint256 => bool) public blacklistedFundraisers;
 
+  /**
+   * @param _raisedFor the address of the person for whom the funds are to be raised
+   * @param _amount total amount that is to be raised
+   * @param _toBeRaisedInDays total number of days during which the funds are to be raised
+   * @param _about Description abount why the user need funds
+   * @param _category category in which this fundraiser lies (eg: education, medical etc). But the input will in number format (eg: 0, 1, 2, ...)
+   */
   function startFundRaiser(
     address _raisedFor,
     uint64 _amount,
@@ -69,7 +82,10 @@ contract Fundraiser is Ownable {
     require(_raisedFor != address(0), "Oops! It's an invalid address");
     require(_amount > 0, "Sorry! Please add some amount to be raised");
     require(_toBeRaisedInDays > 0, "Give us atleast 1 day to raise funds");
-    require(_category <= Category.OTHERS, "Sorry, you have selected wrong category");
+    require(
+      _category >= Category.EDUCATION && _category <= Category.OTHERS,
+      "Sorry, you have selected wrong category"
+    );
 
     fundRaiser memory newFundraiser;
     newFundraiser.raisedBy = msg.sender;
@@ -84,6 +100,9 @@ contract Fundraiser is Ownable {
     fundRaisers.push(newFundraiser);
   }
 
+  /**
+   * @param _fundraiserId id of the fundraiser to whom you want to donate funds
+   */
   function donateFunds(uint256 _fundraiserId) external payable isValidFundraiser(_fundraiserId) {
     /* checking if fundraiser is blacklisted */
     require(
@@ -141,6 +160,10 @@ contract Fundraiser is Ownable {
     donors[_fundraiserId][msg.sender] = _donor;
   }
 
+  /**
+   * @param _fundraiserId id of the fundraiser to whom you want to donate funds
+   * @param _status true or false based on whether its to be blacklisted or remove from blacklist
+   */
   function blacklistFundraiser(
     uint256 _fundraiserId,
     bool _status
@@ -148,6 +171,10 @@ contract Fundraiser is Ownable {
     blacklistedFundraisers[_fundraiserId] = _status;
   }
 
+  /**
+   * @param _fundraiserId id of the fundraiser to whom you want to donate funds
+   * @param _status true or false based on whether to pause or start receiving funds
+   */
   function manageActiveStatusOfFundraiser(
     uint256 _fundraiserId,
     bool _status
@@ -155,6 +182,13 @@ contract Fundraiser is Ownable {
     fundRaisers[_fundraiserId].isActive = _status;
   }
 
+  /**
+   * @param _fundraiserId id of the fundraiser to whom you want to update the details
+   * @param _amount total amount that is to be raised
+   * @param _raisedFor the address of the person for whom the funds are to be raised
+   * @param _about Description abount why the user need funds
+   * @param _category category in which this fundraiser lies (eg: education, medical etc). But the input will in number format (eg: 0, 1, 2, ...)
+   */
   function updateFundraiserDetails(
     uint256 _fundraiserId,
     uint256 _amount,
