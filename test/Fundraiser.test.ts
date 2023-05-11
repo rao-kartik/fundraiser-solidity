@@ -4,8 +4,8 @@ import { ethers } from "hardhat";
 import { Contract, ContractFactory, SignerWithAddress } from "../Types/Fundraiser.types";
 
 describe("Fundraiser Test", () => {
-  let FundraiserToken: ContractFactory,
-    fundraiserTokenContract: Contract,
+  let FundraiserFactory: ContractFactory,
+    fundraiserContract: Contract,
     owner: SignerWithAddress,
     addr1: SignerWithAddress,
     addr2: SignerWithAddress,
@@ -14,36 +14,29 @@ describe("Fundraiser Test", () => {
   before(async (): Promise<void> => {
     [owner, addr1, addr2, addr3] = await ethers.getSigners();
 
-    FundraiserToken = await ethers.getContractFactory("Fundraiser");
-    fundraiserTokenContract = await FundraiserToken.deploy();
+    FundraiserFactory = await ethers.getContractFactory("Fundraiser");
+    fundraiserContract = await FundraiserFactory.deploy();
   });
 
   /**
    * Test for starting a fundraiser
-      * There should be no fundraiser initially
-      * After calling the function a fundraiser is created
-        * Compairing the vaules of created and fundraiser with entered values
+   * There should be no fundraiser initially
+   * After calling the function a fundraiser is created
+   * Compairing the vaules of created and fundraiser with entered values
    */
   describe("Test for starting a fundraiser", (): void => {
-    let _fundRaiserBefore: any, _fundRaiserAfter: any;
+    it("There should be no active fundraiser", async () => {
+      const _fundRaiserBefore: any = await fundraiserContract.fundRaisers(0);
 
-    before(async (): Promise<void> => {
-      // _fundRaiserBefore = await fundraiserTokenContract.fundRaisers(0);
+      expect(_fundRaiserBefore).to.be.revertedWithPanic("");
+    });
 
-      await fundraiserTokenContract
+    it("A new fundraiser is created", async (): Promise<void> => {
+      await fundraiserContract
         .connect(addr1)
         .startFundRaiser(addr1.address, 10000000, 2, "Need money for higher studies", 0);
 
-      _fundRaiserAfter = await fundraiserTokenContract.fundRaisers(0);
-      // console.log("_fundRaiserBefore", _fundRaiserBefore);
-    });
-
-    // it("There should be no active fundraiser", () => {
-    //   expect(_fundRaiserBefore.contributors).to.have.lengthOf(0);
-    // });
-
-    it("A new fundraiser is created", (): void => {
-      console.log("_fundRaiserAfter", _fundRaiserAfter.createdOn, Date.now());
+      const _fundRaiserAfter: any = await fundraiserContract.fundRaisers(0);
 
       expect(_fundRaiserAfter.raisedBy).to.equal(addr1.address);
       expect(_fundRaiserAfter.raisedFor).to.equal(addr1.address);
@@ -55,6 +48,27 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserAfter.category).to.equal(0);
       expect(_fundRaiserAfter.totalSupporters).to.equal(0);
       expect(_fundRaiserAfter.amountTransferred).to.equal(false);
+    });
+  });
+
+  describe("Test for donating funds to a fudraiser", async (): Promise<void> => {
+    let _fundraiserDetails: any;
+
+    before(async (): Promise<void> => {
+      await fundraiserContract
+        .connect(addr1)
+        .startFundRaiser(addr1.address, 10000000, 2, "Need money for higher studies", 0);
+
+      _fundraiserDetails = await fundraiserContract.fundRaisers(0);
+    });
+
+    it("Is a valid fundraiser", async (): Promise<void> => {
+      const donation = ethers.utils.parseEther("10000");
+
+      await fundraiserContract.connect(addr2).donateFunds(1);
+      const _updatedFundraiserDetails = await fundraiserContract.fundRaisers(1, donation);
+
+      console.log(_updatedFundraiserDetails);
     });
   });
 });
