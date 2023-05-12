@@ -36,11 +36,11 @@ contract Fundraiser is Ownable {
     uint256 amount;
     uint256 amountRaised;
     uint16 neededBefore;
-    uint256 totalSupporters;
+    uint256 totalSupportors;
     uint256 createdOn;
     uint256 updatedOn;
     bool isActive;
-    uint256 amountTransferred;
+    uint256 amountClaimed;
   }
 
   struct donor {
@@ -57,6 +57,7 @@ contract Fundraiser is Ownable {
   }
 
   modifier isNotAContractAddress(address _addr) {
+    console.log(_addr.isContract());
     require(!_addr.isContract(), "You can't raise for a contract");
     _;
   }
@@ -65,7 +66,7 @@ contract Fundraiser is Ownable {
     require(
       fundRaisers[_fundraiserId].raisedBy == msg.sender ||
         fundRaisers[_fundraiserId].raisedFor == msg.sender,
-      "Sorry! You don't have access to change the status of fundraiser"
+      "You don't have sufficient permissions"
     );
     _;
   }
@@ -75,7 +76,7 @@ contract Fundraiser is Ownable {
       _transferAmt >= 0 &&
         _transferAmt <= fundRaisers[_fundraiserId].amountRaised &&
         _transferAmt <=
-        fundRaisers[_fundraiserId].amountRaised - fundRaisers[_fundraiserId].amountTransferred,
+        fundRaisers[_fundraiserId].amountRaised - fundRaisers[_fundraiserId].amountClaimed,
       "Sorry! Insufficient balance"
     );
     _;
@@ -94,7 +95,7 @@ contract Fundraiser is Ownable {
    */
   function startFundRaiser(
     address _raisedFor,
-    uint64 _amount,
+    uint256 _amount,
     uint16 _toBeRaisedInDays,
     string memory _about,
     Category _category
@@ -138,12 +139,10 @@ contract Fundraiser is Ownable {
       "Either the fundraiser is no longer accepting donations or He has raised the needed amount"
     );
 
-    // checking transferred amount is less than or equal to desired amount
-    require(msg.value <= fundraiserDetails.amount, "The fundRaiser doesn't need this much amount");
-
-    // checking if the transferred amount is less than remaining amount
+    // checking if the donation is in the required limit
     require(
-      msg.value <= fundraiserDetails.amount - fundraiserDetails.amountRaised,
+      msg.value <= fundraiserDetails.amount &&
+        msg.value <= fundraiserDetails.amount - fundraiserDetails.amountRaised,
       "Thank You for your help but we can't accept funds as the fundraiser doesn't need that much funds."
     );
 
@@ -159,8 +158,8 @@ contract Fundraiser is Ownable {
     fundraiserDetails.amountRaised += msg.value;
 
     // to check if the donor has donated earlier
-    if (_donor.amount == 0) {
-      fundraiserDetails.totalSupporters += 1;
+    if (_donor.amount == 0 && msg.value != 0) {
+      fundraiserDetails.totalSupportors += 1;
     }
 
     // marking fundaraiser as inactive when the comple amount has been raised
@@ -240,7 +239,7 @@ contract Fundraiser is Ownable {
     onlyFundraiserOwner(_fundraiserId)
     hasSufficientBalance(_fundraiserId, _transferAmt)
   {
-    fundRaisers[_fundraiserId].amountTransferred = _transferAmt;
+    fundRaisers[_fundraiserId].amountClaimed = _transferAmt;
     payable(fundRaisers[_fundraiserId].raisedFor).transfer(_transferAmt);
   }
 
@@ -264,6 +263,10 @@ contract Fundraiser is Ownable {
     );
 
     payable(msg.sender).transfer(_transferAmt);
+
+    if (_transferAmt == donors[_fundraiserId][msg.sender].amount) {
+      fundRaisers[_fundraiserId].totalSupportors -= 1;
+    }
 
     donors[_fundraiserId][msg.sender].amount -= _transferAmt;
     fundRaisers[_fundraiserId].amountRaised -= _transferAmt;

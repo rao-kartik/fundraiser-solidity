@@ -1,5 +1,5 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
-import { Contract, Signer, providers, utils } from "ethers";
+import { Contract, Signer, providers, utils, BigNumber } from "ethers";
 
 type Provider = providers.Provider;
 type TransactionRequest = providers.TransactionRequest;
@@ -15,6 +15,21 @@ interface ContractFactory {
   connect(signerOrProvider: Signer | Provider): ContractFactory;
 }
 
+interface fundraiserStruct {
+  raisedBy: SignerWithAddress;
+  raisedFor: SignerWithAddress;
+  about: String;
+  category: BigNumber;
+  amount: BigNumber;
+  amountRaised: BigNumber;
+  neededBefore: BigNumber;
+  totalSupportors: BigNumber;
+  createdOn: BigNumber;
+  updatedOn: BigNumber;
+  isActive: Boolean;
+  amountClaimed: BigNumber;
+}
+
 export type {
   ContractFactory,
   SignerWithAddress,
@@ -23,4 +38,6 @@ export type {
   Provider,
   TransactionRequest,
   Interface,
+  BigNumber,
+  fundraiserStruct,
 };
