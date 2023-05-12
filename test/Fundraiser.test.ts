@@ -230,7 +230,7 @@ describe("Fundraiser Test", () => {
    * After the fundraiser is updated, mathcing the values with updated values
    */
   describe("Test for updating the fundraiser", (): void => {
-    it("The donation should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
+    it("Update should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
       const tx: Promise<void> = fundraiserContract
         .connect(addr3)
         .updateFundraiserDetails(0, amountToBeRaised + 10000, aboutFundraiser, 0, 2, {
@@ -258,7 +258,7 @@ describe("Fundraiser Test", () => {
     it("Update should fail if the new amount is less than amount already raised", async (): Promise<void> => {
       const tx: Promise<void> = fundraiserContract
         .connect(addr3)
-        .updateFundraiserDetails(0, amountToBeRaised - 10000, aboutFundraiser, 0, 2, {
+        .updateFundraiserDetails(0, amountToBeRaised - 50000, aboutFundraiser, 0, 2, {
           gasLimit,
         });
 
@@ -278,6 +278,51 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserDetails.neededBefore).to.equal(4);
       expect(_fundRaiserDetails.category).to.equal(2);
       expect(_fundRaiserDetails.about).to.equal("For Education");
+    });
+  });
+
+  /**
+   * Test for claiming of donations
+   * Checking if its a valid fundraiser id
+   * Checking if the claim is registered by the the owner of the fundraiser or for whom the fundraiser is initiated
+   * Checking if the fundraiser has sufficient funds raised
+   * claim successful
+   */
+  describe("Test for claiming funds by the receiver", async (): Promise<void> => {
+    it("Claim should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.claimDonations(22, 5000, {
+        gasLimit,
+      });
+
+      expect(tx).to.be.revertedWith("Oops! This fundraiser does not exist");
+    });
+
+    it("Claim should fail if the transaction is not initiated by the owner of the fundraiser or for whom the fundraiser is beign raised", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.claimDonations(0, 5000, {
+        gasLimit,
+      });
+
+      expect(tx).to.be.revertedWith("You don't have sufficient permissions");
+    });
+
+    it("Claim should fail if the fundraiser doesn't have sufficient balance", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.connect(addr3).claimDonations(0, 50000000, {
+        gasLimit,
+      });
+
+      expect(tx).to.be.revertedWith("Sorry! Insufficient balance");
+    });
+
+    it("Claim successful", async (): Promise<void> => {
+      const _claim = 5000000;
+
+      await fundraiserContract.connect(addr3).claimDonations(0, _claim, {
+        gasLimit,
+      });
+
+      const _fundRaiserDetails = await fundraiserContract.fundRaisers(0);
+
+      expect(_fundRaiserDetails.amountClaimed).to.be.equal(_claim);
     });
   });
 });
