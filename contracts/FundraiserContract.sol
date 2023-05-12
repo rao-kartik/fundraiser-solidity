@@ -207,18 +207,34 @@ contract Fundraiser is Ownable {
     uint256 _fundraiserId,
     uint256 _amount,
     string memory _about,
-    Category _category
+    Category _category,
+    uint16 _neededBefore
   ) external isValidFundraiser(_fundraiserId) onlyFundraiserOwner(_fundraiserId) {
     fundRaiser memory _updateFundraiser = fundRaisers[_fundraiserId];
 
-    if (_amount >= _updateFundraiser.amountRaised) {
-      _updateFundraiser.amount = _amount;
+    require(
+      _amount >= _updateFundraiser.amountRaised,
+      "The new raised amount is less than the current amount raised"
+    );
+
+    if (_neededBefore < _updateFundraiser.neededBefore) {
+      require(
+        block.timestamp >= (_updateFundraiser.neededBefore - _neededBefore) * 1 days,
+        "Please give us more time to raise the funds"
+      );
     }
 
-    if (bytes(_about).length > 0) {
-      _updateFundraiser.about = _about;
+    if (_neededBefore != _updateFundraiser.neededBefore) {
+      _updateFundraiser.neededBefore = _neededBefore;
     }
 
+    _updateFundraiser.amount = _amount;
+
+    if (_amount == _updateFundraiser.amountRaised && _updateFundraiser.isActive)
+      _updateFundraiser.isActive = false;
+    else if (!_updateFundraiser.isActive) _updateFundraiser.isActive = true;
+
+    _updateFundraiser.about = _about;
     _updateFundraiser.category = _category;
     _updateFundraiser.updatedOn = block.timestamp;
 

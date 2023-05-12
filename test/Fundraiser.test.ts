@@ -11,6 +11,7 @@ import {
 
 const gasLimit = 300000;
 const amountToBeRaised = 10000000;
+const aboutFundraiser = "Need money for higher studies";
 
 describe("Fundraiser Test", () => {
   let FundraiserFactory: ContractFactory,
@@ -27,7 +28,7 @@ describe("Fundraiser Test", () => {
     fundraiserContract = await FundraiserFactory.deploy();
   });
 
-  /*;
+  /**
    * Test for starting a fundraiser
    * There should be no fundraiser initially
    * Thw raised for address passed should not be a contract address
@@ -44,14 +45,9 @@ describe("Fundraiser Test", () => {
     it("The raised for address should not be a contract address", async (): Promise<void> => {
       const tx: Promise<void> = fundraiserContract
         .connect(addr1)
-        .startFundRaiser(
-          fundraiserContract.address,
-          amountToBeRaised,
-          2,
-          "Need money for higher studies",
-          0,
-          { gasLimit }
-        );
+        .startFundRaiser(fundraiserContract.address, amountToBeRaised, 2, aboutFundraiser, 0, {
+          gasLimit,
+        });
 
       expect(tx).to.be.revertedWith("You can't raise for a contract");
     });
@@ -59,7 +55,7 @@ describe("Fundraiser Test", () => {
     it("A new fundraiser is created", async (): Promise<void> => {
       await fundraiserContract
         .connect(addr3)
-        .startFundRaiser(addr3.address, amountToBeRaised, 2, "Need money for higher studies", 0);
+        .startFundRaiser(addr3.address, amountToBeRaised, 2, aboutFundraiser, 0);
 
       const _fundRaiserAfter: fundraiserStruct = await fundraiserContract.fundRaisers(0);
 
@@ -67,7 +63,7 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserAfter.raisedFor).to.equal(addr3.address);
       expect(_fundRaiserAfter.amount).to.equal(amountToBeRaised);
       expect(_fundRaiserAfter.neededBefore).to.equal(2);
-      expect(_fundRaiserAfter.about).to.equal("Need money for higher studies");
+      expect(_fundRaiserAfter.about).to.equal(aboutFundraiser);
       expect(_fundRaiserAfter.isActive).to.equal(true);
       expect(_fundRaiserAfter.amountRaised).to.equal(0);
       expect(_fundRaiserAfter.category).to.equal(0);
@@ -76,7 +72,7 @@ describe("Fundraiser Test", () => {
     });
   });
 
-  /*;
+  /**
    * Test for managing the active status of the fundraiser
    * The fundraiser should be active initially
    * The status should change to false when passed false and true when passed true
@@ -134,7 +130,7 @@ describe("Fundraiser Test", () => {
         .connect(addr2)
         .donateFunds(2, { value: donation, gasLimit });
 
-      expect(tx).to.be.revertedWith("Oops! This fundraiser does not exis");
+      expect(tx).to.be.revertedWith("Oops! This fundraiser does not exist");
     });
 
     it("The donation should fail if the fundraiser is blacklisted", async (): Promise<void> => {
@@ -188,7 +184,7 @@ describe("Fundraiser Test", () => {
     it("The donation should fail if the funds are donated once the time period to raise funds has passed", async (): Promise<void> => {
       await fundraiserContract
         .connect(owner)
-        .startFundRaiser(addr3.address, amountToBeRaised, 1, "Need money for higher studies", 0);
+        .startFundRaiser(addr3.address, amountToBeRaised, 1, aboutFundraiser, 0);
 
       const donation: BigNumber = ethers.utils.parseEther("0.00000000000001");
 
@@ -223,6 +219,65 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserDetails.amountRaised).to.equal(`${amountToBeRaised}`);
       expect(_fundRaiserDetails.totalSupportors).to.equal(1);
       expect(_fundRaiserDetails.isActive).to.equal(false);
+    });
+  });
+
+  /**
+   * Test for updating the fundraiser details
+   * The fundraiser id should be valid
+   * Only the owner of fundraiser or for whom the fundrasier is initiated can update the details
+   * Only if the new amount >= raisedAmount, the fundraiser is updated
+   * After the fundraiser is updated, mathcing the values with updated values
+   */
+  describe("Test for updating the fundraiser", (): void => {
+    it("The donation should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract
+        .connect(addr3)
+        .updateFundraiserDetails(0, amountToBeRaised + 10000, aboutFundraiser, 0, 2, {
+          gasLimit,
+        });
+
+      expect(tx).to.be.revertedWith("Oops! This fundraiser does not exist");
+    });
+
+    it("Update should fail if the update is not initiated by the owner of the fundraiser or for whom the fundraiser is beign raised", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.updateFundraiserDetails(
+        0,
+        amountToBeRaised + 10000,
+        aboutFundraiser,
+        0,
+        2,
+        {
+          gasLimit,
+        }
+      );
+
+      expect(tx).to.be.revertedWith("You don't have sufficient permissions");
+    });
+
+    it("Update should fail if the new amount is less than amount already raised", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract
+        .connect(addr3)
+        .updateFundraiserDetails(0, amountToBeRaised - 10000, aboutFundraiser, 0, 2, {
+          gasLimit,
+        });
+
+      expect(tx).to.be.revertedWith("The new raised amount is less than the current amount raised");
+    });
+
+    it("Update successsfull", async (): Promise<void> => {
+      await fundraiserContract
+        .connect(addr3)
+        .updateFundraiserDetails(0, amountToBeRaised + 110000, "For Education", 2, 4, {
+          gasLimit,
+        });
+
+      const _fundRaiserDetails = await fundraiserContract.fundRaisers(0);
+
+      expect(_fundRaiserDetails.amount).to.equal(amountToBeRaised + 110000);
+      expect(_fundRaiserDetails.neededBefore).to.equal(4);
+      expect(_fundRaiserDetails.category).to.equal(2);
+      expect(_fundRaiserDetails.about).to.equal("For Education");
     });
   });
 });
