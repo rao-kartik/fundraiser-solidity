@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -57,7 +56,6 @@ contract Fundraiser is Ownable {
   }
 
   modifier isNotAContractAddress(address _addr) {
-    console.log(_addr.isContract());
     require(!_addr.isContract(), "You can't raise for a contract");
     _;
   }
