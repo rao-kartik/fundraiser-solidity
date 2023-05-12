@@ -262,29 +262,29 @@ contract Fundraiser is Ownable {
   /**
    *
    * @param _fundraiserId fundraiser id from which the user wants to withdraw the donations
-   * @param _transferAmt amount that is to be withdrawn
+   * @param _withdrawAmt amount that is to be withdrawn
    */
   function withdrawFunds(
     uint _fundraiserId,
-    uint _transferAmt
+    uint _withdrawAmt
   )
     external
     payable
     isValidFundraiser(_fundraiserId)
-    hasSufficientBalance(_fundraiserId, _transferAmt)
+    hasSufficientBalance(_fundraiserId, _withdrawAmt)
   {
     require(
-      donors[_fundraiserId][msg.sender].amount >= _transferAmt,
+      donors[_fundraiserId][msg.sender].amount >= _withdrawAmt,
       "Sorry! Your donated amout is less than your withdrawal amount"
     );
 
-    payable(msg.sender).transfer(_transferAmt);
+    payable(msg.sender).transfer(_withdrawAmt);
 
-    if (_transferAmt == donors[_fundraiserId][msg.sender].amount) {
+    if (_withdrawAmt == donors[_fundraiserId][msg.sender].amount) {
       fundRaisers[_fundraiserId].totalSupportors -= 1;
     }
 
-    donors[_fundraiserId][msg.sender].amount -= _transferAmt;
-    fundRaisers[_fundraiserId].amountRaised -= _transferAmt;
+    donors[_fundraiserId][msg.sender].amount -= _withdrawAmt;
+    fundRaisers[_fundraiserId].amountRaised -= _withdrawAmt;
   }
 }

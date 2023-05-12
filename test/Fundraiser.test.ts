@@ -325,4 +325,62 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserDetails.amountClaimed).to.be.equal(_claim);
     });
   });
+
+  /**
+   * Test for withdrawal of donations by the donor
+   * Checking if its a valid fundraiser id
+   * Checking if the fundraiser has sufficient funds raised
+   * Checking if the donor has donated the amount that he wants to withdraw
+   * withdraw successful
+   */
+  describe("Test for claiming funds by the receiver", async (): Promise<void> => {
+    it("Withdraw should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.withdrawFunds(22, 5000, {
+        gasLimit,
+      });
+
+      expect(tx).to.be.revertedWith("Oops! This fundraiser does not exist");
+    });
+
+    it("Withdraw should fail if the fundraiser doesn't have sufficient balance", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.connect(addr2).withdrawFunds(0, 50000000, {
+        gasLimit,
+      });
+
+      expect(tx).to.be.revertedWith("Sorry! Insufficient balance");
+    });
+
+    it("Withdraw should fail if the withdrawal amount is more than what is donated", async (): Promise<void> => {
+      const donation: BigNumber = ethers.utils.parseEther("0.00000000000005");
+      await fundraiserContract.donateFunds(0, { value: donation, gasLimit });
+
+      const tx = fundraiserContract.withdrawFunds(0, 60000, {
+        gasLimit,
+      });
+
+      expect(tx).to.be.revertedWith(
+        "Sorry! Your donated amout is less than your withdrawal amount"
+      );
+    });
+
+    it("Withdraw successful", async (): Promise<void> => {
+      const _withdraw = 5000;
+
+      const _fundRaiserDetailsBefore = await fundraiserContract.fundRaisers(0);
+      const _donorDetailsBefore = await fundraiserContract.donors(0, owner.address);
+
+      await fundraiserContract.withdrawFunds(0, _withdraw, {
+        gasLimit,
+      });
+      const _fundRaiserDetailsAfter = await fundraiserContract.fundRaisers(0);
+
+      expect(_fundRaiserDetailsAfter.amountRaised).to.be.equal(
+        _fundRaiserDetailsBefore.amountRaised - _withdraw
+      );
+
+      const _donorDetailsAfter = await fundraiserContract.donors(0, owner.address);
+
+      expect(_donorDetailsAfter.amount).to.be.equal(_donorDetailsBefore.amount - _withdraw);
+    });
+  });
 });
