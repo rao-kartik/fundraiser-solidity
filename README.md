@@ -56,6 +56,8 @@ yarn test
 
 #### **Test Report**
 
+The contract is thorughly test on all possible conditions.
+
 <img width="1178" alt="image" src="https://github.com/rao-kartik/nirman-pro/assets/77038631/c148ddd2-27ea-4254-91c7-a0a68df1caf4">
 
 ## **Deploying**
