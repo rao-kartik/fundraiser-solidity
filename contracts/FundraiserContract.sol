@@ -50,7 +50,7 @@ contract Fundraiser is Ownable {
   /* Structs, Valriable, Enums etc end */
 
   /* Events Start */
-  event fundraiserStarted(
+  event FundraiserStarted(
     address _raisedBy,
     address _raisedFor,
     uint256 _amount,
@@ -148,7 +148,7 @@ contract Fundraiser is Ownable {
 
     fundRaisers.push(newFundraiser);
 
-    emit fundraiserStarted(msg.sender, _raisedFor, _amount, _toBeRaisedInDays, _about, _category);
+    emit FundraiserStarted(msg.sender, _raisedFor, _amount, _toBeRaisedInDays, _about, _category);
   }
 
   /**

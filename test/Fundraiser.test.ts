@@ -74,12 +74,12 @@ describe("Fundraiser Test", () => {
 
     it("Should emit an event for successful start fo fundraiser", async (): Promise<void> => {
       const tx = fundraiserContract
-        .connect(addr3)
+        .connect(addr1)
         .startFundRaiser(addr3.address, amountToBeRaised, 2, aboutFundraiser, 0);
 
-      expect(tx)
+      await expect(tx)
         .to.emit(fundraiserContract, "FundraiserStarted")
-        .withArgs(addr3.address, amountToBeRaised, 2, aboutFundraiser, 0);
+        .withArgs(addr1.address, addr3.address, amountToBeRaised, 2, aboutFundraiser, 0);
     });
   });
 
@@ -129,7 +129,7 @@ describe("Fundraiser Test", () => {
         gasLimit,
       });
 
-      expect(tx).to.emit(fundraiserContract, "ActivationStautsChanged").withArgs(1, false);
+      await expect(tx).to.emit(fundraiserContract, "ActivationStautsChanged").withArgs(1, false);
     });
   });
 
@@ -249,9 +249,17 @@ describe("Fundraiser Test", () => {
     it("Should emit event on successsful donation", async (): Promise<void> => {
       const donation: BigNumber = ethers.utils.parseEther("0.0000000000001");
 
+      const fundraiserDetails = await fundraiserContract.fundRaisers(1);
+
+      if (!fundraiserDetails.isActive) {
+        await fundraiserContract.connect(addr3).manageActiveStatusOfFundraiser(1, true, {
+          gasLimit,
+        });
+      }
+
       const tx = fundraiserContract.donateFunds(1, { value: donation, gasLimit });
 
-      expect(tx)
+      await expect(tx)
         .to.emit(fundraiserContract, "DonationSuccessful")
         .withArgs(owner.address, 1, donation);
     });
@@ -325,7 +333,7 @@ describe("Fundraiser Test", () => {
           gasLimit,
         });
 
-      expect(tx)
+      await expect(tx)
         .to.emit(fundraiserContract, "UpdateSuccessful")
         .withArgs(1, amountToBeRaised + 10000, aboutFundraiser, 1, 3);
     });
@@ -377,13 +385,15 @@ describe("Fundraiser Test", () => {
     });
 
     it("Should emit event on successful claim of donations", async (): Promise<void> => {
-      const _claim = 50000;
+      const _claim = 50;
 
-      const tx = fundraiserContract.connect(addr3).claimDonations(1, _claim, {
+      const tx = fundraiserContract.connect(addr3).claimDonations(0, _claim, {
         gasLimit,
       });
 
-      expect(tx).to.emit(fundraiserContract, "ClaimSuccessful").withArgs(1, _claim);
+      await expect(tx)
+        .to.emit(fundraiserContract, "ClaimSuccessful")
+        .withArgs(0, addr3.address, _claim);
     });
   });
 
@@ -446,13 +456,15 @@ describe("Fundraiser Test", () => {
     });
 
     it("Should emit event on successful withdrawal of donated funds", async (): Promise<void> => {
-      const _claim = 5000;
+      const _withdrawAmt = 5000;
 
-      const tx = fundraiserContract.withdrawFunds(0, _claim, {
+      const tx = fundraiserContract.withdrawFunds(0, _withdrawAmt, {
         gasLimit,
       });
 
-      expect(tx).to.emit(fundraiserContract, "WithdrawSuccessful").withArgs(1, _claim);
+      await expect(tx)
+        .to.emit(fundraiserContract, "WithdrawSuccessful")
+        .withArgs(0, owner.address, _withdrawAmt);
     });
   });
 
@@ -488,7 +500,7 @@ describe("Fundraiser Test", () => {
     it("Should emit event on successful change of blacklist status", async (): Promise<void> => {
       const tx = fundraiserContract.blacklistFundraiser(1, true, { gasLimit });
 
-      expect(tx).to.emit(fundraiserContract, "BlacklistedStatusChanged").withArgs(1, true);
+      await expect(tx).to.emit(fundraiserContract, "BlacklistedStatusChanged").withArgs(1, true);
     });
   });
 });
