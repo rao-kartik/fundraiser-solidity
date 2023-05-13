@@ -10,11 +10,13 @@ async function main() {
     fundraiserContract.deployTransaction.hash
   );
 
-  console.log(`Contract details:
+  if (receipt)
+    console.log(`Contract details:
   deployedBy: ${receipt.from},
   contractAddress: ${receipt.contractAddress},
   gas: ${receipt.gasUsed.toString()},
   `);
+  else console.log(`Contract deloyed with contract address: ${fundraiserContract.address}`);
 }
 
 main().catch((error) => {
