@@ -218,7 +218,7 @@ describe("Fundraiser Test", () => {
 
     //   const tx: Promise<void> = fundraiserContract
     //     .connect(addr2)
-    //     .donateFunds(1, { value: donation, gasLimit });
+    //     .donateFunds(2, { value: donation, gasLimit });
 
     //   await expect(tx).to.be.revertedWith("Sorry! The timeperiod to raise funds has passed");
     // });
@@ -236,6 +236,13 @@ describe("Fundraiser Test", () => {
       const _donorDetails = await fundraiserContract.donors(0, addr2.address);
 
       expect(_donorDetails.amount).to.equal(donation);
+
+      const _donorsAddress = await fundraiserContract.donorsAddressList(
+        0,
+        _fundRaiserDetails.totalSupportors - 1
+      );
+
+      expect(_donorsAddress).to.equal(addr2.address);
     });
 
     it("Mark fundraiser as inactive once the needed amount is raised", async (): Promise<void> => {

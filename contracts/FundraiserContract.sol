@@ -109,6 +109,7 @@ contract Fundraiser is Ownable {
 
   /* Mappings Start */
   fundRaiser[] public fundRaisers;
+  mapping(uint256 => address[]) public donorsAddressList;
   mapping(uint256 => mapping(address => donor)) public donors;
   mapping(uint256 => bool) public blacklistedFundraisers;
 
@@ -203,6 +204,8 @@ contract Fundraiser is Ownable {
     _donor.amount += msg.value;
     _donor.donatedOn = block.timestamp;
     donors[_fundraiserId][msg.sender] = _donor;
+
+    donorsAddressList[_fundraiserId].push(msg.sender);
 
     emit DonationSuccessful(msg.sender, _fundraiserId, msg.value);
   }
