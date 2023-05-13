@@ -34,6 +34,7 @@ describe("Fundraiser Test", () => {
    * Thw raised for address passed should not be a contract address
    * After calling the function a fundraiser is created
    * Compairing the vaules of created and fundraiser with entered values
+   * Emit event for successsful start of fundraiser
    */
   describe("Test for starting a fundraiser", (): void => {
     it("There should be no active fundraiser", async () => {
@@ -70,12 +71,23 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserAfter.totalSupportors).to.equal(0);
       expect(_fundRaiserAfter.amountClaimed).to.equal(0);
     });
+
+    it("Should emit an event for successful start fo fundraiser", async (): Promise<void> => {
+      const tx = fundraiserContract
+        .connect(addr3)
+        .startFundRaiser(addr3.address, amountToBeRaised, 2, aboutFundraiser, 0);
+
+      expect(tx)
+        .to.emit(fundraiserContract, "FundraiserStarted")
+        .withArgs(addr3.address, amountToBeRaised, 2, aboutFundraiser, 0);
+    });
   });
 
   /**
    * Test for managing the active status of the fundraiser
    * The fundraiser should be active initially
    * The status should change to false when passed false and true when passed true
+   * Emit event for change of activation status
    */
   describe("Test for managing the active status of the fundraiser", async (): Promise<void> => {
     it("Status should be active once the fundraiser is created", async (): Promise<void> => {
@@ -111,6 +123,14 @@ describe("Fundraiser Test", () => {
 
       expect(_fundRaiserDetails.isActive).to.equal(true);
     });
+
+    it("Should emit event on successful change of status", async (): Promise<void> => {
+      const tx = fundraiserContract.connect(addr3).manageActiveStatusOfFundraiser(1, false, {
+        gasLimit,
+      });
+
+      expect(tx).to.emit(fundraiserContract, "ActivationStautsChanged").withArgs(1, false);
+    });
   });
 
   /**
@@ -121,6 +141,7 @@ describe("Fundraiser Test", () => {
    * Donation should be less than or equal to what is desired & the remaining amount that is left to be raised
    * After the donation is successful check if the required fields are updated or not
    * After the funds are donated and the needed amount is raised, the fundraiser should be marked as inactive
+   * Emit event for successsful donation
    */
   describe("Test for donating funds to a fudraiser", (): void => {
     it("The donation should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
@@ -220,6 +241,16 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserDetails.totalSupportors).to.equal(1);
       expect(_fundRaiserDetails.isActive).to.equal(false);
     });
+
+    it("Should emit event on successsful donation", async (): Promise<void> => {
+      const donation: BigNumber = ethers.utils.parseEther("0.0000000000001");
+
+      const tx = fundraiserContract.donateFunds(1, { value: donation, gasLimit });
+
+      expect(tx)
+        .to.emit(fundraiserContract, "DonationSuccessful")
+        .withArgs(owner.address, 1, donation);
+    });
   });
 
   /**
@@ -228,6 +259,7 @@ describe("Fundraiser Test", () => {
    * Only the owner of fundraiser or for whom the fundrasier is initiated can update the details
    * Only if the new amount >= raisedAmount, the fundraiser is updated
    * After the fundraiser is updated, mathcing the values with updated values
+   * Emit event for successsful update
    */
   describe("Test for updating the fundraiser", (): void => {
     it("Update should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
@@ -279,6 +311,18 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserDetails.category).to.equal(2);
       expect(_fundRaiserDetails.about).to.equal("For Education");
     });
+
+    it("Should emit event on successful update of fundraiser", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract
+        .connect(addr3)
+        .updateFundraiserDetails(1, amountToBeRaised + 10000, aboutFundraiser, 1, 3, {
+          gasLimit,
+        });
+
+      expect(tx)
+        .to.emit(fundraiserContract, "UpdateSuccessful")
+        .withArgs(1, amountToBeRaised + 10000, aboutFundraiser, 1, 3);
+    });
   });
 
   /**
@@ -287,6 +331,7 @@ describe("Fundraiser Test", () => {
    * Checking if the claim is registered by the the owner of the fundraiser or for whom the fundraiser is initiated
    * Checking if the fundraiser has sufficient funds raised
    * claim successful
+   * Emit event for successsful claim
    */
   describe("Test for claiming funds by the receiver", async (): Promise<void> => {
     it("Claim should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
@@ -324,6 +369,16 @@ describe("Fundraiser Test", () => {
 
       expect(_fundRaiserDetails.amountClaimed).to.be.equal(_claim);
     });
+
+    it("Should emit event on successful claim of donations", async (): Promise<void> => {
+      const _claim = 50000;
+
+      const tx = fundraiserContract.connect(addr3).claimDonations(1, _claim, {
+        gasLimit,
+      });
+
+      expect(tx).to.emit(fundraiserContract, "ClaimSuccessful").withArgs(1, _claim);
+    });
   });
 
   /**
@@ -332,8 +387,9 @@ describe("Fundraiser Test", () => {
    * Checking if the fundraiser has sufficient funds raised
    * Checking if the donor has donated the amount that he wants to withdraw
    * withdraw successful
+   * Emit event for successsful withdrawal
    */
-  describe("Test for claiming funds by the receiver", async (): Promise<void> => {
+  describe("Test for withdrawal of funds by the donor", async (): Promise<void> => {
     it("Withdraw should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
       const tx: Promise<void> = fundraiserContract.withdrawFunds(22, 5000, {
         gasLimit,
@@ -381,6 +437,52 @@ describe("Fundraiser Test", () => {
       const _donorDetailsAfter = await fundraiserContract.donors(0, owner.address);
 
       expect(_donorDetailsAfter.amount).to.be.equal(_donorDetailsBefore.amount - _withdraw);
+    });
+
+    it("Should emit event on successful withdrawal of donated funds", async (): Promise<void> => {
+      const _claim = 5000;
+
+      const tx = fundraiserContract.withdrawFunds(0, _claim, {
+        gasLimit,
+      });
+
+      expect(tx).to.emit(fundraiserContract, "WithdrawSuccessful").withArgs(1, _claim);
+    });
+  });
+
+  describe("Test for balacklisting and whitlisting a fundraiser", (): void => {
+    it("Give error if anyone other thanthe owner of the contract tries to change the blacklist status of the fundraiser", async (): Promise<void> => {
+      const tx = fundraiserContract.connect(addr1).blacklistFundraiser(1, true, { gasLimit });
+
+      expect(tx).to.be.revertedWith("Ownable: caller is not the owner");
+    });
+
+    it("Blacklist the fundraiser", async (): Promise<void> => {
+      const _fundRaiserBefore = await fundraiserContract.blacklistedFundraisers(1);
+
+      await fundraiserContract.blacklistFundraiser(1, true, { gasLimit });
+
+      const _fundRaiserAfter = await fundraiserContract.blacklistedFundraisers(1);
+
+      expect(_fundRaiserBefore).to.equal(false);
+      expect(_fundRaiserAfter).to.equal(true);
+    });
+
+    it("Whitelist the fundraiser", async (): Promise<void> => {
+      const _fundRaiserBefore = await fundraiserContract.blacklistedFundraisers(1);
+
+      await fundraiserContract.blacklistFundraiser(1, false, { gasLimit });
+
+      const _fundRaiserAfter = await fundraiserContract.blacklistedFundraisers(1);
+
+      expect(_fundRaiserBefore).to.equal(true);
+      expect(_fundRaiserAfter).to.equal(false);
+    });
+
+    it("Should emit event on successful change of blacklist status", async (): Promise<void> => {
+      const tx = fundraiserContract.blacklistFundraiser(1, true, { gasLimit });
+
+      expect(tx).to.emit(fundraiserContract, "BlacklistedStatusChanged").withArgs(1, true);
     });
   });
 });
