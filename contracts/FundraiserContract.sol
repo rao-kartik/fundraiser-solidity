@@ -13,6 +13,7 @@ import "@openzeppelin/contracts/utils/Address.sol";
 contract Fundraiser is Ownable {
   using Address for address;
 
+  /* Structs, Valriable, Enums etc start */
   enum Category {
     EDUCATION,
     MEDICAL,
@@ -46,7 +47,32 @@ contract Fundraiser is Ownable {
     uint256 amount;
     uint256 donatedOn;
   }
+  /* Structs, Valriable, Enums etc end */
 
+  /* Events Start */
+  event fundraiserStarted(
+    address _raisedBy,
+    address _raisedFor,
+    uint256 _amount,
+    uint16 _toBeRaisedInDays,
+    string _about,
+    Category _category
+  );
+  event DonationSuccessful(address _donatedBy, uint _donatedTo, uint _amountDonated);
+  event ActivationStautsChanged(uint _fundraiser, bool _activationStatus);
+  event UpdateSuccessful(
+    uint256 _fundraiser,
+    uint256 _updatedAmount,
+    string _updatedAbout,
+    Category _updatedCategory,
+    uint16 _updatedNeededBefore
+  );
+  event BlacklistedStatusChanged(uint fundRaiser, bool _blacklistStatus);
+  event ClaimSuccessful(uint _claimedFrom, address _claimedBy, uint _amountCliamed);
+  event WithdrawSuccessful(uint _withdrawalFrom, address _withdrawalBy, uint _amountWithdrawn);
+  /* Events End */
+
+  /* Modifiers Start */
   modifier isValidFundraiser(uint256 _fundraiserId) {
     require(
       _fundraiserId >= 0 && _fundraiserId < fundRaisers.length,
@@ -79,10 +105,14 @@ contract Fundraiser is Ownable {
     );
     _;
   }
+  /* Modifiers End */
 
+  /* Mappings Start */
   fundRaiser[] public fundRaisers;
   mapping(uint256 => mapping(address => donor)) public donors;
   mapping(uint256 => bool) public blacklistedFundraisers;
+
+  /* Mappings End */
 
   /**
    * @param _raisedFor the address of the person for whom the funds are to be raised
@@ -117,6 +147,8 @@ contract Fundraiser is Ownable {
     newFundraiser.about = _about;
 
     fundRaisers.push(newFundraiser);
+
+    emit fundraiserStarted(msg.sender, _raisedFor, _amount, _toBeRaisedInDays, _about, _category);
   }
 
   /**
@@ -171,6 +203,8 @@ contract Fundraiser is Ownable {
     _donor.amount += msg.value;
     _donor.donatedOn = block.timestamp;
     donors[_fundraiserId][msg.sender] = _donor;
+
+    emit DonationSuccessful(msg.sender, _fundraiserId, msg.value);
   }
 
   /**
@@ -182,6 +216,8 @@ contract Fundraiser is Ownable {
     bool _status
   ) external onlyOwner isValidFundraiser(_fundraiserId) {
     blacklistedFundraisers[_fundraiserId] = _status;
+
+    emit BlacklistedStatusChanged(_fundraiserId, _status);
   }
 
   /**
@@ -193,6 +229,8 @@ contract Fundraiser is Ownable {
     bool _status
   ) external isValidFundraiser(_fundraiserId) onlyFundraiserOwner(_fundraiserId) {
     fundRaisers[_fundraiserId].isActive = _status;
+
+    emit ActivationStautsChanged(_fundraiserId, _status);
   }
 
   /**
@@ -237,6 +275,8 @@ contract Fundraiser is Ownable {
     _updateFundraiser.updatedOn = block.timestamp;
 
     fundRaisers[_fundraiserId] = _updateFundraiser;
+
+    emit UpdateSuccessful(_fundraiserId, _amount, _about, _category, _neededBefore);
   }
 
   /**
@@ -255,6 +295,8 @@ contract Fundraiser is Ownable {
   {
     fundRaisers[_fundraiserId].amountClaimed = _transferAmt;
     payable(fundRaisers[_fundraiserId].raisedFor).transfer(_transferAmt);
+
+    emit ClaimSuccessful(_fundraiserId, msg.sender, _transferAmt);
   }
 
   /**
@@ -284,5 +326,7 @@ contract Fundraiser is Ownable {
 
     donors[_fundraiserId][msg.sender].amount -= _withdrawAmt;
     fundRaisers[_fundraiserId].amountRaised -= _withdrawAmt;
+
+    emit WithdrawSuccessful(_fundraiserId, msg.sender, _withdrawAmt);
   }
 }
