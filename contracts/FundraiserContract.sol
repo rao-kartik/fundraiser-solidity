@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -71,7 +70,7 @@ contract Fundraiser is Ownable {
   event BlacklistedStatusChanged(uint fundRaiser, bool _blacklistStatus);
   event ClaimSuccessful(uint _claimedFrom, address _claimedBy, uint _amountCliamed);
   event WithdrawSuccessful(uint _withdrawalFrom, address _withdrawalBy, uint _amountWithdrawn);
-  event AmountSuccessfullyReturnedToDOnors(uint _returnedFrom);
+  event AmountSuccessfullyReturnedToDonors(uint _returnedFrom);
   /* Events End */
 
   /* Modifiers Start */
@@ -117,6 +116,7 @@ contract Fundraiser is Ownable {
 
   /* Mappings End */
 
+  /* Functions Start */
   /**
    * @notice This function is to start a new fundraiser
    * @param _raisedFor the address of the person for whom the funds are to be raised
@@ -365,22 +365,18 @@ contract Fundraiser is Ownable {
       "Sorry! We are not able to find any donations"
     );
 
-    fundRaiser memory fR = fundRaisers[_fundraiserId];
-
-    console.log("raju", fR.totalSupportors);
-
     for (uint i = 0; i < fundRaisers[_fundraiserId].totalSupportors; i++) {
       address _donorAddress = donorsAddressList[_fundraiserId][i];
 
       uint _donorDonations = donors[_fundraiserId][_donorAddress].amount;
-      console.log("donation", _donorAddress, _donorDonations);
 
-      // payable(_donorAddress).transfer(_donorDonations);
+      payable(_donorAddress).transfer(_donorDonations);
       donors[_fundraiserId][_donorAddress].amount = 0;
     }
 
     fundRaisers[_fundraiserId].amountReturned = true;
 
-    emit AmountSuccessfullyReturnedToDOnors(_fundraiserId);
+    emit AmountSuccessfullyReturnedToDonors(_fundraiserId);
   }
 }
+/* Funtions End */
