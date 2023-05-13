@@ -1,16 +1,22 @@
 import { ethers } from "hardhat";
 
+import { Contract, ContractFactory, TransactionReceipt } from "../Types/Fundraiser.types";
+
 async function main() {
-  const Fundraiser = await ethers.getContractFactory("Fundraiser");
-  const fundraiser = await Fundraiser.deploy();
+  const Fundraiser: ContractFactory = await ethers.getContractFactory("Fundraiser");
+  const fundraiserContract: Contract = await Fundraiser.deploy();
 
-  await fundraiser.deployed();
+  const receipt: TransactionReceipt = await ethers.provider.getTransactionReceipt(
+    fundraiserContract.deployTransaction.hash
+  );
 
-  console.log("contract deployed");
+  console.log(`Contract details:
+  deployedBy: ${receipt.from},
+  contractAddress: ${receipt.contractAddress},
+  gas: ${receipt.gasUsed.toString()},
+  `);
 }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
 main().catch((error) => {
   console.error(error);
   process.exitCode = 1;

@@ -3,6 +3,7 @@ import { Contract, Signer, providers, utils, BigNumber } from "ethers";
 
 type Provider = providers.Provider;
 type TransactionRequest = providers.TransactionRequest;
+type TransactionReceipt = providers.TransactionReceipt;
 type Interface = utils.Interface;
 
 interface ContractFactory {
@@ -40,4 +41,5 @@ export type {
   Interface,
   BigNumber,
   fundraiserStruct,
+  TransactionReceipt,
 };
