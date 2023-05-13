@@ -118,6 +118,7 @@ contract Fundraiser is Ownable {
   /* Mappings End */
 
   /**
+   * @notice This function is to start a new fundraiser
    * @param _raisedFor the address of the person for whom the funds are to be raised
    * @param _amount total amount that is to be raised
    * @param _toBeRaisedInDays total number of days during which the funds are to be raised
@@ -155,6 +156,7 @@ contract Fundraiser is Ownable {
   }
 
   /**
+   * @notice This functions is for donating funds to the fundraisers
    * @param _fundraiserId id of the fundraiser to whom you want to donate funds
    */
   function donateFunds(uint256 _fundraiserId) external payable isValidFundraiser(_fundraiserId) {
@@ -212,6 +214,7 @@ contract Fundraiser is Ownable {
   }
 
   /**
+   * @notice This function is to whitelist or blacklist a fundraiser
    * @param _fundraiserId id of the fundraiser to whom you want to donate funds
    * @param _status true or false based on whether its to be blacklisted or remove from blacklist
    */
@@ -225,6 +228,7 @@ contract Fundraiser is Ownable {
   }
 
   /**
+   * @notice This function is to change the active status of the fundraiser
    * @param _fundraiserId id of the fundraiser to whom you want to donate funds
    * @param _status true or false based on whether to pause or start receiving funds
    */
@@ -238,6 +242,7 @@ contract Fundraiser is Ownable {
   }
 
   /**
+   * @notice This function is to update the details of fundraiser
    * @param _fundraiserId id of the fundraiser to whom you want to update the details
    * @param _amount total amount that is to be raised
    * @param _about Description abount why the user need funds
@@ -283,6 +288,7 @@ contract Fundraiser is Ownable {
   }
 
   /**
+   * @notice This function is for claiming the donations by the donee
    * @param _fundraiserId id of findraiser of which the funda re  to be claimed
    * @param _transferAmt amount that is to be claimed
    */
@@ -303,7 +309,7 @@ contract Fundraiser is Ownable {
   }
 
   /**
-   *
+   * @notice This function is to withdraw donations give by the donor
    * @param _fundraiserId fundraiser id from which the user wants to withdraw the donations
    * @param _withdrawAmt amount that is to be withdrawn
    */
@@ -333,6 +339,10 @@ contract Fundraiser is Ownable {
     emit WithdrawSuccessful(_fundraiserId, msg.sender, _withdrawAmt);
   }
 
+  /**
+   * @notice This function is to transfer all donations back to the donors
+   * @param _fundraiserId id of the fundraiser of which you want to revert donations
+   */
   function transferFundsBackToDonors(
     uint _fundraiserId
   ) external payable isValidFundraiser(_fundraiserId) {
@@ -345,7 +355,10 @@ contract Fundraiser is Ownable {
 
     require(!fundRaisers[_fundraiserId].amountReturned, "Donations already returned");
 
-    require(fundRaisers[_fundraiserId].amountClaimed == 0, "Part of donation has already been claimed. You can't transfer funds");
+    require(
+      fundRaisers[_fundraiserId].amountClaimed == 0,
+      "Part of donation has already been claimed. You can't transfer funds"
+    );
 
     require(
       fundRaisers[_fundraiserId].totalSupportors > 0,

@@ -479,6 +479,14 @@ describe("Fundraiser Test", () => {
     });
   });
 
+  /**
+   * Test for blacklisting and whitelisting a fundraiser
+   * Only owner of the contract will be able to blacklist or whitelist a fundraiser
+   * Check if its a valid fundraiser
+   * Check if the fundraiser blacklisted or whitelisted
+   * Emit event on successful status change
+   */
+
   describe("Test for balacklisting and whitlisting a fundraiser", (): void => {
     it("Give error if anyone other thanthe owner of the contract tries to change the blacklist status of the fundraiser", async (): Promise<void> => {
       const tx = fundraiserContract.connect(addr1).blacklistFundraiser(1, true, { gasLimit });
@@ -521,7 +529,16 @@ describe("Fundraiser Test", () => {
     });
   });
 
-  describe("Test for transferring back amputn to donors", (): void => {
+  /**
+   * Test for transferring donations back to respective donors
+   * Check if  the fundraiser is valid
+   * Transfer can be made only by the owner of contract or owner of fundraiser or for whom the fundraiser is initiated
+   * Check if there are any donors
+   * Check if there is any amount claimed by the donee
+   * Transfer the donations successfully to the donors addresses
+   * Emit event on successful transfer of donations
+   */
+  describe("Test for transferring back donations to donors", (): void => {
     it("Transfer should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
       const tx: Promise<void> = fundraiserContract.transferFundsBackToDonors(22, {
         gasLimit,
