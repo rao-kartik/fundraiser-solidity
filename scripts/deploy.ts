@@ -14,9 +14,12 @@ async function main() {
 
   if (receipt)
     console.log(`Contract details:
-  deployedBy: ${receipt.from},
-  contractAddress: ${receipt.contractAddress},
-  gas: ${receipt.gasUsed.toString()},
+      deployedBy: ${receipt.from},
+      contractAddress: ${receipt.contractAddress},
+      gas: ${receipt.gasUsed.toString()},
+      blockNumber: ${receipt.blockNumber},
+      transaction: ${receipt.transactionHash},
+      block: ${receipt.blockHash}
   `);
   else console.log(`Contract deloyed with contract address: ${fundraiserContract.address}`);
 }
