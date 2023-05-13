@@ -25,7 +25,7 @@ interface fundraiserStruct {
   neededBefore: BigNumber;
   totalSupportors: BigNumber;
   createdOn: BigNumber;
-  updatedOn: BigNumber;
+  amountReturned: Boolean;
   isActive: Boolean;
   amountClaimed: BigNumber;
 }

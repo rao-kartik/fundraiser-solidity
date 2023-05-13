@@ -73,6 +73,7 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserAfter.totalSupportors).to.equal(0);
       expect(_fundRaiserAfter.amountClaimed).to.equal(0);
       expect(_fundRaiserAfter.createdOn).to.equal(blockTimestamp);
+      expect(_fundRaiserAfter.amountReturned).to.equal(false);
     });
 
     it("Should emit an event for successful start fo fundraiser", async (): Promise<void> => {
@@ -485,6 +486,12 @@ describe("Fundraiser Test", () => {
       await expect(tx).to.be.revertedWith("Ownable: caller is not the owner");
     });
 
+    it("Blacklisting should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.blacklistFundraiser(22, true, { gasLimit });
+
+      await expect(tx).to.be.revertedWith("Oops! This fundraiser does not exist");
+    });
+
     it("Blacklist the fundraiser", async (): Promise<void> => {
       const _fundRaiserBefore = await fundraiserContract.blacklistedFundraisers(1);
 
@@ -511,6 +518,93 @@ describe("Fundraiser Test", () => {
       const tx = fundraiserContract.blacklistFundraiser(1, true, { gasLimit });
 
       await expect(tx).to.emit(fundraiserContract, "BlacklistedStatusChanged").withArgs(1, true);
+    });
+  });
+
+  describe("Test for transferring back amputn to donors", (): void => {
+    it("Transfer should fail if the fundraiser Id doesn't exist", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.transferFundsBackToDonors(22, {
+        gasLimit,
+      });
+
+      await expect(tx).to.be.revertedWith("Oops! This fundraiser does not exist");
+    });
+
+    it("Transfer should fail if the transfer is not made by the owner of the contract or the owner of fundraiser or for whom the fundraiser has been raised", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.connect(addr1).transferFundsBackToDonors(0, {
+        gasLimit,
+      });
+
+      await expect(tx).to.be.revertedWith("You don't have sufficient permissions");
+    });
+
+    it("Transfer should fail if there are no donors", async (): Promise<void> => {
+      await fundraiserContract
+        .connect(addr3)
+        .startFundRaiser(addr3.address, amountToBeRaised, 2, aboutFundraiser, 0);
+
+      const tx: Promise<void> = fundraiserContract.connect(addr3).transferFundsBackToDonors(2, {
+        gasLimit,
+      });
+
+      await expect(tx).to.be.revertedWith("Sorry! We are not able to find any donations");
+    });
+
+    it("Transfer should fail if donee has claimed the amount", async (): Promise<void> => {
+      const tx: Promise<void> = fundraiserContract.connect(addr3).transferFundsBackToDonors(0, {
+        gasLimit,
+      });
+
+      await expect(tx).to.be.revertedWith(
+        "Part of donation has already been claimed. You can't transfer funds"
+      );
+    });
+
+    it("Successfully transfered to donors", async (): Promise<void> => {
+      const _fundraiserId = 2;
+      const donation: BigNumber = ethers.utils.parseEther("0.00000000000005");
+      await fundraiserContract
+        .connect(addr2)
+        .donateFunds(_fundraiserId, { value: donation, gasLimit });
+
+      const _fundRaiserBefore = await fundraiserContract.fundRaisers(_fundraiserId);
+
+      await fundraiserContract.transferFundsBackToDonors(_fundraiserId, {
+        gasLimit,
+      });
+
+      const _fundRaiserAfter = await fundraiserContract.fundRaisers(_fundraiserId);
+
+      expect(_fundRaiserBefore.amountReturned).to.equal(false);
+      expect(_fundRaiserAfter.amountReturned).to.equal(true);
+
+      for (let i = 0; i < _fundRaiserAfter.totalSupportors; i++) {
+        const _donorAddress = await fundraiserContract.donorsAddressList(_fundraiserId, i);
+
+        const _donorAmount = (await fundraiserContract.donors(_fundraiserId, _donorAddress)).amount;
+
+        expect(_donorAmount).to.equal(0);
+      }
+    });
+
+    it("Transfer should fail if the donations are already returned", async (): Promise<void> => {
+      const _fundraiserId = 2;
+
+      const tx: Promise<void> = fundraiserContract
+        .connect(addr3)
+        .transferFundsBackToDonors(_fundraiserId, {
+          gasLimit,
+        });
+
+      await expect(tx).to.be.revertedWith("Donations already returned");
+    });
+
+    it("Should emit event on successful transfer", async (): Promise<void> => {
+      const tx = fundraiserContract.transferFundsBackToDonors(1, {
+        gasLimit,
+      });
+
+      expect(tx).to.emit(fundraiserContract, "AmountSuccessfullyReturnedToDOnors").withArgs(0);
     });
   });
 });

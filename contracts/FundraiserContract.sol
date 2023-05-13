@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
+import "hardhat/console.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 
@@ -38,9 +39,9 @@ contract Fundraiser is Ownable {
     uint16 neededBefore;
     uint256 totalSupportors;
     uint256 createdOn;
-    uint256 updatedOn;
     bool isActive;
     uint256 amountClaimed;
+    bool amountReturned;
   }
 
   struct donor {
@@ -70,6 +71,7 @@ contract Fundraiser is Ownable {
   event BlacklistedStatusChanged(uint fundRaiser, bool _blacklistStatus);
   event ClaimSuccessful(uint _claimedFrom, address _claimedBy, uint _amountCliamed);
   event WithdrawSuccessful(uint _withdrawalFrom, address _withdrawalBy, uint _amountWithdrawn);
+  event AmountSuccessfullyReturnedToDOnors(uint _returnedFrom);
   /* Events End */
 
   /* Modifiers Start */
@@ -191,6 +193,7 @@ contract Fundraiser is Ownable {
     // to check if the donor has donated earlier
     if (_donor.amount == 0 && msg.value != 0) {
       fundraiserDetails.totalSupportors += 1;
+      donorsAddressList[_fundraiserId].push(msg.sender);
     }
 
     // marking fundaraiser as inactive when the comple amount has been raised
@@ -204,8 +207,6 @@ contract Fundraiser is Ownable {
     _donor.amount += msg.value;
     _donor.donatedOn = block.timestamp;
     donors[_fundraiserId][msg.sender] = _donor;
-
-    donorsAddressList[_fundraiserId].push(msg.sender);
 
     emit DonationSuccessful(msg.sender, _fundraiserId, msg.value);
   }
@@ -275,7 +276,6 @@ contract Fundraiser is Ownable {
 
     _updateFundraiser.about = _about;
     _updateFundraiser.category = _category;
-    _updateFundraiser.updatedOn = block.timestamp;
 
     fundRaisers[_fundraiserId] = _updateFundraiser;
 
@@ -331,5 +331,43 @@ contract Fundraiser is Ownable {
     fundRaisers[_fundraiserId].amountRaised -= _withdrawAmt;
 
     emit WithdrawSuccessful(_fundraiserId, msg.sender, _withdrawAmt);
+  }
+
+  function transferFundsBackToDonors(
+    uint _fundraiserId
+  ) external payable isValidFundraiser(_fundraiserId) {
+    require(
+      fundRaisers[_fundraiserId].raisedBy == msg.sender ||
+        fundRaisers[_fundraiserId].raisedFor == msg.sender ||
+        owner() == msg.sender,
+      "You don't have sufficient permissions"
+    );
+
+    require(!fundRaisers[_fundraiserId].amountReturned, "Donations already returned");
+
+    require(fundRaisers[_fundraiserId].amountClaimed == 0, "Part of donation has already been claimed. You can't transfer funds");
+
+    require(
+      fundRaisers[_fundraiserId].totalSupportors > 0,
+      "Sorry! We are not able to find any donations"
+    );
+
+    fundRaiser memory fR = fundRaisers[_fundraiserId];
+
+    console.log("raju", fR.totalSupportors);
+
+    for (uint i = 0; i < fundRaisers[_fundraiserId].totalSupportors; i++) {
+      address _donorAddress = donorsAddressList[_fundraiserId][i];
+
+      uint _donorDonations = donors[_fundraiserId][_donorAddress].amount;
+      console.log("donation", _donorAddress, _donorDonations);
+
+      // payable(_donorAddress).transfer(_donorDonations);
+      donors[_fundraiserId][_donorAddress].amount = 0;
+    }
+
+    fundRaisers[_fundraiserId].amountReturned = true;
+
+    emit AmountSuccessfullyReturnedToDOnors(_fundraiserId);
   }
 }
