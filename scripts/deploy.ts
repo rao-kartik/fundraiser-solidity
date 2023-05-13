@@ -6,9 +6,11 @@ async function main() {
   const Fundraiser: ContractFactory = await ethers.getContractFactory("Fundraiser");
   const fundraiserContract: Contract = await Fundraiser.deploy();
 
-  const receipt: TransactionReceipt = await ethers.provider.getTransactionReceipt(
-    fundraiserContract.deployTransaction.hash
-  );
+  const txHash = fundraiserContract.deployTransaction.hash;
+
+  const receipt: TransactionReceipt =
+    (await ethers.provider.getTransactionReceipt(txHash)) ||
+    (await fundraiserContract.deployTransaction.wait());
 
   if (receipt)
     console.log(`Contract details:
