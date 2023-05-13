@@ -54,11 +54,13 @@ describe("Fundraiser Test", () => {
     });
 
     it("A new fundraiser is created", async (): Promise<void> => {
-      await fundraiserContract
+      const tx = await fundraiserContract
         .connect(addr3)
         .startFundRaiser(addr3.address, amountToBeRaised, 2, aboutFundraiser, 0);
 
       const _fundRaiserAfter: fundraiserStruct = await fundraiserContract.fundRaisers(0);
+
+      const blockTimestamp = (await ethers.provider.getBlock(tx.blockNumber)).timestamp;
 
       expect(_fundRaiserAfter.raisedBy).to.equal(addr3.address);
       expect(_fundRaiserAfter.raisedFor).to.equal(addr3.address);
@@ -70,6 +72,7 @@ describe("Fundraiser Test", () => {
       expect(_fundRaiserAfter.category).to.equal(0);
       expect(_fundRaiserAfter.totalSupportors).to.equal(0);
       expect(_fundRaiserAfter.amountClaimed).to.equal(0);
+      expect(_fundRaiserAfter.createdOn).to.equal(blockTimestamp);
     });
 
     it("Should emit an event for successful start fo fundraiser", async (): Promise<void> => {
