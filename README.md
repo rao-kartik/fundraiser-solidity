@@ -58,7 +58,7 @@ yarn test
 
 The contract is thorughly test on all possible conditions.
 
-<img width="1178" alt="image" src="https://github.com/rao-kartik/nirman-pro/assets/77038631/c148ddd2-27ea-4254-91c7-a0a68df1caf4">
+![image](https://github.com/rao-kartik/pesto-assignments/assets/77038631/62ed98d6-96a9-4e64-a2cd-294dacca4cfc)
 
 ## **Deploying**
 
