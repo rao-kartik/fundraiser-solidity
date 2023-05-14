@@ -97,7 +97,7 @@ The contract is thorughly test on all possible conditions.
 
 After the contracts are deployed, you should see the contract address, transaction hash and other details in the console.
 
-<img width="638" alt="image" src="https://github.com/rao-kartik/nirman-pro/assets/77038631/659ce238-5066-42f1-a659-eaf339d4f58e">
+![image](https://github.com/rao-kartik/fundraiser-solidity/assets/77038631/0c866241-2a82-4a9e-af1e-949c77cbdb98)
 
 ## **Built With**
 
