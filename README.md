@@ -97,7 +97,7 @@ The contract is thorughly test on all possible conditions.
 
 After the contracts are deployed, you should see the contract address, transaction hash and other details in the console.
 
-![image](https://github.com/rao-kartik/pesto-assignments/assets/77038631/a5992d49-0169-49ce-8bc0-ffd2299fcdc2)
+![image](https://github.com/rao-kartik/fundraiser-solidity/assets/77038631/0c866241-2a82-4a9e-af1e-949c77cbdb98)
 
 ## **Built With**
 
