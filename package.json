@@ -8,7 +8,7 @@
     "clean": "npx hardhat clean",
     "test": "npx hardhat test",
     "h_node": "npx hardhat node",
-    "deploy": "hardhat run scripts/deploy.ts --network",
+    "deploy": "yarn test && hardhat run scripts/deploy.ts --network",
     "h_console": "npx hardhat console"
   },
   "author": "",
